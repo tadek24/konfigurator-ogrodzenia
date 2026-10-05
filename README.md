@@ -1,4 +1,4 @@
-# Ogrodzenia / edytor CAD - wersja 0.2
+# Ogrodzenia / edytor CAD - wersja 0.3
 
 Next.js 16, TypeScript i React Three Fiber. Rysunek 2D i scena 3D korzystają z tych samych odcinków.
 
@@ -28,7 +28,16 @@ Adres: http://127.0.0.1:3101. Wersja produkcyjna: `npm run build`, potem `npm st
 
 W osobnym panelu: nazwa systemu, szerokość przęsła (0,25-6 m), rozliczenie za metr lub pełny moduł, cena przęsła, słupka, bramy i furtki. Przy naliczaniu za moduł końcowe przycięte przęsło jest liczone jako pełne. Słupki i 3D uwzględniają rzeczywistą szerokość modułów, nie równy podział całego odcinka.
 
-Panel jest nadal lokalny, bez logowania: ustawienia zapisują się w localStorage tej przeglądarki i tego adresu. Otwiera się w osobnej karcie, żeby nie gubić rysunku. Po powrocie do konfiguratora ceny odświeżają się. Publikacja wielofirmowa wymaga uwierzytelniania, autoryzacji oraz zaufanego katalogu na serwerze. Zdjęcia i modele produktów pozostają następnym etapem.
+Panel jest nadal lokalny, bez logowania: ustawienia zapisują się w localStorage tej przeglądarki i tego adresu. Otwiera się w osobnej karcie, żeby nie gubić rysunku. Po powrocie do konfiguratora ceny odświeżają się. Publikacja wielofirmowa wymaga uwierzytelniania, autoryzacji oraz zaufanego katalogu na serwerze.
+
+### Nowości 0.3
+
+- Katalog do 100 produktów: dodawanie i usuwanie przęseł, bram, furtek oraz zestawów automatyki. Import/eksport katalogu, migracja cenników 0.2, wybór wypełnienia 3D i metody montażu na spadku.
+- Brama lub furtka z lewej biblioteki: przeciągnij kartę na istniejący odcinek 2D. Gest obsługuje mysz i dotyk, podgląd dopasowuje kierunek, wysokości gruntu i pozycję; otwór zastępuje przęsła. Nie można upuścić na istniejącym otworze albo zbyt krótkim odcinku.
+- Model otworu i zgodna automatyka we właściwościach; ich ceny są ujęte w tabeli, PDF oraz zapytaniu. Domyślne ceny są demonstracyjne.
+- Zdjęcia PNG/JPG/WEBP do 400 KB i adres instrukcji producenta w katalogu. Zdjęcie ilustruje produkt, nie jest rekonstrukcją geometrii. Model siatkowy ma druty w obu kierunkach; dokładne modele indywidualnych wzorów wymagają osobnego etapu.
+- Sekcja kontroli montażu w wycenie: docinki, spadki, przecięcia odcinków, szerokości bram, kompatybilność napędu, strefa ruchu. Lista obejmuje pomiary, grunt i fundamenty, mocowania i powłoki, bramy, zasilanie, zabezpieczenia, odbiór i konserwację. Linki do dokumentacji WIŚNIOWSKI i Nice; nie zastępuje instrukcji wybranego systemu ani projektu fundamentów. Strefa ruchu jest parametrem informacyjnym; program nie wykrywa przeszkód poza narysowaną geometrią.
+- Czterostronicowa instrukcja public/instrukcja-konfiguratora.pdf i przyciski w edytorze oraz panelu.
 
 ## Zapytania e-mail
 
