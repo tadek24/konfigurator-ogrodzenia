@@ -1,21 +1,34 @@
 'use client';
-import { Canvas } from '@react-three/fiber';
-import { Grid, OrbitControls, Center } from '@react-three/drei';
-import { Component, type ReactNode } from 'react';
-import { length, type Project, type Product } from '@/lib/project';
-class Boundary extends Component<{ children: ReactNode }, { failed: boolean }> {
- state = { failed: false };
- static getDerivedStateFromError() { return { failed: true }; }
- render() { return this.state.failed ? <div className="empty">Podgląd 3D wymaga przeglądarki z obsługą WebGL. Możesz nadal pracować w 2D.</div> : this.props.children; }
+import {Canvas} from '@react-three/fiber';
+import {OrbitControls,PerspectiveCamera} from '@react-three/drei';
+import {Component,useMemo,useEffect,type ReactNode} from 'react';
+import {PlaneGeometry} from 'three';
+import {length,type Project,type Product,type Segment} from '@/lib/project';
+import {elevation,terrainHeight} from '@/lib/geometry';
+class Boundary extends Component<{children:ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return{failed:true};}render(){return this.state.failed?<div className="empty">Brak obsługi WebGL. Możesz nadal pracować w 2D.</div>:this.props.children;}}
+function Rail({x,y,width,rise,color}:{x:number;y:number;width:number;rise:number;color:string}){return <mesh position={[x,y,0]} rotation={[0,0,Math.atan2(rise,width)]} castShadow><boxGeometry args={[Math.hypot(width,rise),.055,.055]}/><meshStandardMaterial color={color} roughness={.7} metalness={.25}/></mesh>;}
+function Fence({s,product,project,cx,cy}:{s:Segment;product:Product;project:Project;cx:number;cy:number}){
+ const l=length(s),h=project.height,opening=s.kind!=='fence',count=opening?1:Math.ceil(l/product.moduleWidth);
+ const ground=(t:number)=>elevation(s.a)+(elevation(s.b)-elevation(s.a))*t;
+ const panelWidth=(i:number)=>opening?l:Math.min(product.moduleWidth,l-i*product.moduleWidth);
+ return <group position={[(s.a.x+s.b.x)/2-cx,0,(s.a.y+s.b.y)/2-cy]} rotation={[0,-Math.atan2(s.b.y-s.a.y,s.b.x-s.a.x),0]}>
+ {Array.from({length:count+1},(_,i)=>{const x=opening?i*l:Math.min(l,i*product.moduleWidth);return <mesh key={`post${i}`} position={[-l/2+x,ground(x/l)+h/2+.025,0]} castShadow><boxGeometry args={[.12,h+.13,.12]}/><meshStandardMaterial color={project.color} metalness={.35} roughness={.6}/></mesh>;})}
+ {Array.from({length:count},(_,i)=>{const width=panelWidth(i),begin=opening?0:i*product.moduleWidth,za=ground(begin/l),zb=ground((begin+width)/l),rise=opening?0:zb-za,base=opening?Math.max(za,zb):za;
+ return <group key={i} position={[-l/2+begin,base+.08,0]}>
+ {product.style==='horizontal'?Array.from({length:9},(_,j)=><Rail key={j} x={width/2} y={.08+j*(h-.2)/8+rise/2} width={Math.max(.05,width-.14)} rise={rise} color={project.color}/>):Array.from({length:Math.max(1,Math.floor(width/.15))},(_,j)=>{const x=.12+j*.15;return <mesh key={j} position={[x,h/2+rise*x/width,0]} castShadow><boxGeometry args={[product.style==='mesh'?.018:.045,h-.1,.04]}/><meshStandardMaterial color={project.color} roughness={.7}/></mesh>;})}
+ {[.15,h-.15].map(y=><Rail key={y} x={width/2} y={y+rise/2} width={Math.max(.05,width-.12)} rise={rise} color={project.color}/>)}
+ {opening&&<mesh position={[s.kind==='gate'?width/2:width-.2,h/2,0.05]}><boxGeometry args={[.035,s.kind==='gate'?h:.16,.035]}/><meshStandardMaterial color="#adb2b6"/></mesh>}
+ </group>;})}</group>;
 }
-export default function Scene({ project, product }: { project: Project; product: Product }) {
- return <Boundary><Canvas shadows camera={{ position: [30, 25, 32], fov: 45 }} fallback={<div className="empty">Brak obsługi WebGL — wybierz widok 2D.</div>}><color attach="background" args={['#15191d']} /><ambientLight intensity={1.5} /><directionalLight position={[10, 20, 10]} intensity={3} castShadow /><Grid infiniteGrid cellSize={1} sectionSize={5} cellColor="#30373d" sectionColor="#495159" fadeDistance={90} />
- <Center top>{project.segments.map(s => {
- const l = length(s), h = project.height, count = Math.ceil(l / product.moduleWidth), gate = s.kind !== 'fence';
- return <group key={s.id} position={[(s.a.x + s.b.x)/2, 0, (s.a.y + s.b.y)/2]} rotation={[0, -Math.atan2(s.b.y-s.a.y, s.b.x-s.a.x), 0]}>
- {Array.from({ length: gate ? 2 : count + 1 }, (_, i) => <mesh key={`p${i}`} position={[-l/2 + i*l/(gate ? 1 : count), h/2, 0]} castShadow><boxGeometry args={[.1, h+.1, .1]} /><meshStandardMaterial color={project.color} /></mesh>)}
- {product.style === 'horizontal' ? Array.from({ length: 9 }, (_, i) => <mesh key={i} position={[0, .1+i*(h-.15)/8, 0]} castShadow><boxGeometry args={[Math.max(.05,l-.12), .09, .05]} /><meshStandardMaterial color={gate ? '#697981' : project.color} /></mesh>) : Array.from({ length: Math.ceil(l/.15) }, (_, i) => <mesh key={i} position={[-l/2+.1+i*.15, h/2, 0]} castShadow><boxGeometry args={[product.style === 'mesh' ? .015 : .04, h-.1, .04]} /><meshStandardMaterial color={project.color} /></mesh>)}
- {[.2, h-.2].map(y => <mesh key={y} position={[0,y,0]}><boxGeometry args={[l,.035,.05]} /><meshStandardMaterial color={project.color} /></mesh>)}
- {s.kind === 'gate' && <mesh position={[0,h/2,0]}><boxGeometry args={[.05,h,.07]} /><meshStandardMaterial color="#90a5ae" /></mesh>}
- </group>; })}</Center><OrbitControls makeDefault target={[0,0,0]} minDistance={3} maxDistance={100} maxPolarAngle={Math.PI/2-.02} /></Canvas></Boundary>;
+function World({project,product}:{project:Project;product:Product}){
+ const points=project.segments.flatMap(s=>[s.a,s.b]);
+ const minX=Math.min(0,...points.map(p=>p.x)),maxX=Math.max(8,...points.map(p=>p.x)),minY=Math.min(0,...points.map(p=>p.y)),maxY=Math.max(8,...points.map(p=>p.y));
+ const cx=(minX+maxX)/2,cy=(minY+maxY)/2,extent=Math.max(12,maxX-minX,maxY-minY),targetY=points.length?points.reduce((n,p)=>n+elevation(p),0)/points.length:0;
+ const terrain=useMemo(()=>{const geo=new PlaneGeometry(extent+18,extent+18,64,64);geo.rotateX(-Math.PI/2);const pos=geo.attributes.position;for(let i=0;i<pos.count;i++)pos.setY(i,terrainHeight({x:pos.getX(i)+cx,y:pos.getZ(i)+cy},project.segments)-.015);geo.computeVertexNormals();return geo;},[project.segments,extent,cx,cy]);
+ useEffect(()=>()=>terrain.dispose(),[terrain]);
+ return <><color attach="background" args={['#dce3e6']}/><fog attach="fog" args={['#dce3e6',extent*2,extent*6]}/><PerspectiveCamera makeDefault position={[extent*.9,targetY+extent*.65,extent*.95]} fov={42}/><hemisphereLight args={['#f7f5ee','#6c7762',2.5]}/><directionalLight position={[extent*.5,targetY+extent,extent*.3]} intensity={3} castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-extent} shadow-camera-right={extent} shadow-camera-top={extent} shadow-camera-bottom={-extent} shadow-camera-far={extent*4} shadow-bias={-.0002}/>
+ <mesh geometry={terrain} receiveShadow><meshStandardMaterial color="#8e9a7b" roughness={1}/></mesh><mesh rotation={[-Math.PI/2,0,0]} position={[0,Math.min(0,...points.map(elevation))-.12,0]} receiveShadow><planeGeometry args={[extent*12,extent*12]}/><meshStandardMaterial color="#a9b097" roughness={1}/></mesh>
+ {project.segments.map(s=><Fence key={s.id} s={s} product={product} project={project} cx={cx} cy={cy}/>)}
+ <OrbitControls makeDefault target={[0,targetY+.5,0]} minDistance={2} maxDistance={extent*4} maxPolarAngle={Math.PI/2-.03}/></>;
 }
+export default function Scene(props:{project:Project;product:Product}){return <Boundary><Canvas shadows dpr={[1,1.5]} fallback={<div className="empty">WebGL niedostępny — wybierz widok 2D.</div>}><World {...props}/></Canvas></Boundary>;}
