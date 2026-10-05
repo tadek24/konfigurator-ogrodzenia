@@ -1,4 +1,4 @@
-# Ogrodzenia / edytor CAD - wersja 0.3
+# Ogrodzenia / edytor CAD - wersja 0.4
 
 Next.js 16, TypeScript i React Three Fiber. Rysunek 2D i scena 3D korzystają z tych samych odcinków.
 
@@ -35,7 +35,7 @@ Panel jest nadal lokalny, bez logowania: ustawienia zapisują się w localStorag
 - Katalog do 100 produktów: dodawanie i usuwanie przęseł, bram, furtek oraz zestawów automatyki. Import/eksport katalogu, migracja cenników 0.2, wybór wypełnienia 3D i metody montażu na spadku.
 - Brama lub furtka z lewej biblioteki: przeciągnij kartę na istniejący odcinek 2D. Gest obsługuje mysz i dotyk, podgląd dopasowuje kierunek, wysokości gruntu i pozycję; otwór zastępuje przęsła. Nie można upuścić na istniejącym otworze albo zbyt krótkim odcinku.
 - Model otworu i zgodna automatyka we właściwościach; ich ceny są ujęte w tabeli, PDF oraz zapytaniu. Domyślne ceny są demonstracyjne.
-- Zdjęcia PNG/JPG/WEBP do 400 KB i adres instrukcji producenta w katalogu. Zdjęcie ilustruje produkt, nie jest rekonstrukcją geometrii. Model siatkowy ma druty w obu kierunkach; dokładne modele indywidualnych wzorów wymagają osobnego etapu.
+- Zdjęcia PNG/JPG/WEBP do 400 KB i adres instrukcji producenta w katalogu. Zdjęcie może zostać włączone jako płaska powierzchnia 2,5D w modelu. Nie jest rekonstrukcją geometrii. Model siatkowy ma druty w obu kierunkach; dokładne modele indywidualnych wzorów wymagają osobnego etapu.
 - Sekcja kontroli montażu w wycenie: docinki, spadki, przecięcia odcinków, szerokości bram, kompatybilność napędu, strefa ruchu. Lista obejmuje pomiary, grunt i fundamenty, mocowania i powłoki, bramy, zasilanie, zabezpieczenia, odbiór i konserwację. Linki do dokumentacji WIŚNIOWSKI i Nice; nie zastępuje instrukcji wybranego systemu ani projektu fundamentów. Strefa ruchu jest parametrem informacyjnym; program nie wykrywa przeszkód poza narysowaną geometrią.
 - Czterostronicowa instrukcja public/instrukcja-konfiguratora.pdf i przyciski w edytorze oraz panelu.
 
@@ -56,3 +56,13 @@ Endpoint waliduje kontakt, geometrię i katalog, nie pozwala zmienić odbiorcy, 
 ## Następny etap
 
 Konta i katalog w bazie; trwale zapisywane zapytania ze statusem; wysyłka z potwierdzeniem doręczenia; przeciąganie wspólnych węzłów i walidacja kolizji; pomiary i bardziej szczegółowe modele. Zamówienia oraz płatności można dodać jako osobny etap po zaakceptowaniu wyceny.
+
+## Nowości 0.4
+
+- Dowolny kąt kierunku w stopniach, także ułamkowy; rysowanie według długości i kąta oraz edycja istniejącego odcinka.
+- Bramy mają ramy, podział skrzydeł, zawiasy i klamki; bramy przesuwne mają prowadzenie. Plan pokazuje symbole otwierania.
+- Zdjęcie można włączyć jako płaski podgląd w 3D. Najlepsze PNG na wprost z przezroczystym tłem; prawdziwa bryła wymaga GLB (import GLB jeszcze nie jest obsługiwany).
+- /instrukcja: około 48-sekundowy film z napisami z rzeczywistych widoków oraz PDF. Bez lektora.
+- /dla-firm: prezentacja korzyści, dodatków i mierzenia skuteczności bez gwarantowania wzrostu obrotów.
+
+Aktualna wersja jest demonstratorem/pilotem. Sprzedaż jako wspólnej usługi wymaga kont, bazy katalogu, trwale zapisywanych zapytań i aktywacji poczty. Brak pomiarów wyników sprzedaży.
