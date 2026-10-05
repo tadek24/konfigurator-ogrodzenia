@@ -1,0 +1,13 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {splitOpening,setNodeElevation,terrainHeight} from '../src/lib/geometry';
+import {initialProject,estimate,products,isProject,type Segment} from '../src/lib/project';
+import {isCatalog} from '../src/lib/catalog';
+import {isInquiry} from '../src/lib/inquiry';
+const fence:Segment={id:'a',kind:'fence',a:{x:0,y:0,z:0},b:{x:10,y:0,z:1}};
+test('opening replaces fence geometry and interpolates terrain',()=>{const parts=splitOpening(fence,'gate',4,3);assert.equal(parts.length,3);assert.deepEqual(parts.map(p=>p.kind),['fence','gate','fence']);assert.equal(parts[1].a.x,3);assert.equal(parts[1].b.x,7);assert.equal(parts[1].a.z,.3);assert.equal(parts[1].b.z,.7);const q=estimate({...initialProject,segments:parts},products[0]);assert.equal(q.meters,6);assert.equal(q.modules,4);assert.equal(q.rows[2].quantity,1);assert.equal(q.posts,6);});
+test('opening outside section is rejected, full replacement is supported',()=>{assert.throws(()=>splitOpening(fence,'gate',4,8));assert.throws(()=>splitOpening(fence,'wicket',NaN,0));assert.equal(splitOpening(fence,'gate',10,0).length,1);});
+test('module width and price mode change module count and cost',()=>{const project={...initialProject,segments:[fence]};const q=estimate(project,{...products[0],moduleWidth:3,priceMode:'module',price:500});assert.equal(q.modules,4);assert.equal(q.posts,5);assert.equal(q.rows[0].total,2000);assert.equal(q.total,2700);});
+test('shared terrain nodes are changed together',()=>{const next:Segment={id:'b',kind:'fence',a:{...fence.b},b:{x:10,y:5,z:1}};const result=setNodeElevation([fence,next],fence.b,2);assert.equal(result[0].b.z,2);assert.equal(result[1].a.z,2);assert.equal(terrainHeight({x:5,y:0},[fence]),.5);assert.equal(terrainHeight({x:10,y:0},[fence]),1);});
+test('starts empty and validates imported terrain and admin dimensions',()=>{assert.equal(initialProject.segments.length,0);assert.ok(isCatalog(products));assert.equal(isCatalog(products.map(p=>({...p,moduleWidth:0}))),false);assert.equal(isProject({...initialProject,segments:[{...fence,b:{...fence.b,z:Infinity}}]}),false);});
+test('inquiry validation rejects header injection, empty projects and honeypots',()=>{const valid={project:{...initialProject,segments:[fence]},catalog:products,name:'Jan Test',email:'test@example.com',phone:'',note:'',website:'',requestId:'test-1234567890123456'};assert.ok(isInquiry(valid));assert.equal(isInquiry({...valid,email:'test@example.com\nBcc: other@example.com'}),false);assert.equal(isInquiry({...valid,website:'spam'}),false);assert.equal(isInquiry({...valid,project:initialProject}),false);});
