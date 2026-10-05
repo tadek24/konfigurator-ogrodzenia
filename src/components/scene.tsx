@@ -4,6 +4,8 @@ import {OrbitControls,PerspectiveCamera} from '@react-three/drei';
 import {Component,useMemo,useEffect,type ReactNode} from 'react';
 import {PlaneGeometry} from 'three';
 import {category,length,type Project,type Product,type Segment} from '@/lib/project';
+import OpeningModel from './opening-model';
+import PhotoSurface from './photo-surface';
 import {elevation,terrainHeight} from '@/lib/geometry';
 class Boundary extends Component<{children:ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return{failed:true};}render(){return this.state.failed?<div className="empty">Brak obsługi WebGL. Możesz nadal pracować w 2D.</div>:this.props.children;}}
 function Rail({x,y,width,rise,color}:{x:number;y:number;width:number;rise:number;color:string}){return <mesh position={[x,y,0]} rotation={[0,0,Math.atan2(rise,width)]} castShadow><boxGeometry args={[Math.hypot(width,rise),.055,.055]}/><meshStandardMaterial color={color} roughness={.7} metalness={.25}/></mesh>;}
@@ -15,10 +17,10 @@ function Fence({s,product,project,cx,cy}:{s:Segment;product:Product;project:Proj
  {Array.from({length:count+1},(_,i)=>{const x=opening?i*l:Math.min(l,i*product.moduleWidth);return <mesh key={`post${i}`} position={[-l/2+x,ground(x/l)+h/2+.025,0]} castShadow><boxGeometry args={[.12,h+.13,.12]}/><meshStandardMaterial color={project.color} metalness={.35} roughness={.6}/></mesh>;})}
  {Array.from({length:count},(_,i)=>{const width=panelWidth(i),begin=opening?0:i*product.moduleWidth,za=ground(begin/l),zb=ground((begin+width)/l),rise=opening||product.mounting==='steps'?0:zb-za,base=opening||product.mounting==='steps'?Math.max(za,zb):za;
  return <group key={i} position={[-l/2+begin,base+.08,0]}>
- {product.style==='horizontal'?Array.from({length:9},(_,j)=><Rail key={j} x={width/2} y={.08+j*(h-.2)/8+rise/2} width={Math.max(.05,width-.14)} rise={rise} color={project.color}/>):Array.from({length:Math.max(1,Math.floor(width/.15))},(_,j)=>{const x=.12+j*.15;return <mesh key={j} position={[x,h/2+rise*x/width,0]} castShadow><boxGeometry args={[product.style==='mesh'?.018:.045,h-.1,.04]}/><meshStandardMaterial color={project.color} roughness={.7}/></mesh>;})}
+ {opening?<OpeningModel width={width} height={h} product={product} color={project.color} wicket={s.kind==='wicket'} automated={!!s.automationId}/>:<>{product.style==='horizontal'?Array.from({length:9},(_,j)=><Rail key={j} x={width/2} y={.08+j*(h-.2)/8+rise/2} width={Math.max(.05,width-.14)} rise={rise} color={project.color}/>):Array.from({length:Math.max(1,Math.floor(width/.15))},(_,j)=>{const x=.12+j*.15;return <mesh key={j} position={[x,h/2+rise*x/width,0]} castShadow><boxGeometry args={[product.style==='mesh'?.018:.045,h-.1,.04]}/><meshStandardMaterial color={project.color} roughness={.7}/></mesh>;})}
  {product.style==='mesh'&&Array.from({length:Math.max(2,Math.floor((h-.1)/.15))},(_,j)=><group key={'wire'+j} position={[width/2,.08+j*.15+rise/2,0]} rotation={[0,0,Math.atan2(rise,width)]}><mesh castShadow><boxGeometry args={[Math.hypot(width-.14,rise),.015,.018]}/><meshStandardMaterial color={project.color} roughness={.7}/></mesh></group>)}
  {[.15,h-.15].map(y=><Rail key={y} x={width/2} y={y+rise/2} width={Math.max(.05,width-.12)} rise={rise} color={project.color}/>)}
- {opening&&<mesh position={[s.kind==='gate'?width/2:width-.2,h/2,0.05]}><boxGeometry args={[.035,s.kind==='gate'?h:.16,.035]}/><meshStandardMaterial color="#adb2b6"/></mesh>}
+ </>}{product.usePhoto&&product.image&&<PhotoSurface image={product.image} width={width} height={h}/>}
  </group>;})}</group>;
 }
 function World({project,product,catalog}:{project:Project;product:Product;catalog:Product[]}){
@@ -33,3 +35,5 @@ function World({project,product,catalog}:{project:Project;product:Product;catalo
  <OrbitControls makeDefault target={[0,targetY+.5,0]} minDistance={2} maxDistance={extent*4} maxPolarAngle={Math.PI/2-.03}/></>;
 }
 export default function Scene(props:{project:Project;product:Product;catalog:Product[]}){return <Boundary><Canvas shadows dpr={[1,1.5]} fallback={<div className="empty">WebGL niedostępny — wybierz widok 2D.</div>}><World {...props}/></Canvas></Boundary>;}
+
+
