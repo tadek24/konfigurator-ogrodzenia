@@ -1,6 +1,6 @@
 export type Point = { x: number; y: number; z?: number };
 export type Segment = { id: string; a: Point; b: Point; kind: 'fence' | 'gate' | 'wicket'; openingProductId?: string; automationId?: string };
-export type Product = { id: string; name: string; style: 'horizontal' | 'vertical' | 'mesh'; price: number; moduleWidth: number; priceMode: 'meter' | 'module'; gatePrice: number; wicketPrice: number; postPrice: number; category?: 'fence'|'gate'|'wicket'|'automation'; gateType?: 'swing'|'sliding'; compatibleWith?: 'swing'|'sliding'|'both'; image?: string; instructionsUrl?: string; clearance?: number; mounting?: 'slope'|'steps' };
+export type Product = { id: string; name: string; style: 'horizontal' | 'vertical' | 'mesh'; price: number; moduleWidth: number; priceMode: 'meter' | 'module'; gatePrice: number; wicketPrice: number; postPrice: number; category?: 'fence'|'gate'|'wicket'|'automation'; gateType?: 'swing'|'sliding'; compatibleWith?: 'swing'|'sliding'|'both'; image?: string; usePhoto?: boolean; instructionsUrl?: string; clearance?: number; mounting?: 'slope'|'steps' };
 export type Project = { version: 1; name: string; segments: Segment[]; productId: string; height: number; color: string };
 export const products: Product[] = [
  { id: 'modern', name: 'Modern / poziome', style: 'horizontal', price: 420, moduleWidth: 2, priceMode: 'meter', gatePrice: 4200, wicketPrice: 1450, postPrice: 140 },
@@ -38,4 +38,5 @@ export function isProject(value: unknown): value is Project {
  const point = (v: Point) => v && Number.isFinite(v.x) && Number.isFinite(v.y) && Math.abs(v.x) <= 500 && Math.abs(v.y) <= 500 && (v.z === undefined || (Number.isFinite(v.z) && Math.abs(v.z) <= 20));
  return p.version === 1 && typeof p.name === 'string' && p.name.length <= 80 && typeof p.productId === 'string' && /^[a-z0-9-]{1,80}$/i.test(p.productId) && Number.isFinite(p.height) && p.height >= .5 && p.height <= 3 && /^#[0-9a-f]{6}$/i.test(p.color) && Array.isArray(p.segments) && p.segments.length <= 500 && new Set(p.segments.map(s=>s?.id)).size === p.segments.length && p.segments.every(s => s && typeof s.id === 'string' && point(s.a) && point(s.b) && ['fence', 'gate', 'wicket'].includes(s.kind) && [s.openingProductId,s.automationId].every(id=>id===undefined||(typeof id==='string'&&/^[a-z0-9-]{1,80}$/i.test(id))) && length(s) >= .25 && length(s) <= 200);
 }
+
 
