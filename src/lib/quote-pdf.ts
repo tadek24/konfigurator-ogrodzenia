@@ -3,7 +3,7 @@ import {elevation} from './geometry';
 const enc=new TextEncoder();
 const join=(parts:Uint8Array[])=>{const out=new Uint8Array(parts.reduce((n,p)=>n+p.length,0));let offset=0;for(const p of parts){out.set(p,offset);offset+=p.length;}return out;};
 /** Embedded TrueType font keeps Polish text searchable without a remote font service. */
-export function quotePdf(project:Project,product:Product,fontBytes:Uint8Array):Uint8Array{
+export function quotePdf(project:Project,product:Product,fontBytes:Uint8Array,catalog:Product[]=[]):Uint8Array{
  const view=new DataView(fontBytes.buffer,fontBytes.byteOffset,fontBytes.byteLength),tables:Record<string,number>={};
  for(let i=0;i<view.getUint16(4);i++){const off=12+i*16;tables[String.fromCharCode(...fontBytes.slice(off,off+4))]=view.getUint32(off+8);}
  const units=view.getUint16(tables.head+18),metrics=view.getUint16(tables.hhea+34),cmap=tables.cmap;
@@ -23,21 +23,21 @@ export function quotePdf(project:Project,product:Product,fontBytes:Uint8Array):U
  const clipped=(s:string,max:number,size:number)=>{let value=safe(s);while(measure(value,size)>max)value=value.slice(0,-1);return value===safe(s)?value:value.slice(0,-3)+'...';};
  const right=(s:string,y:number,size=10)=>text(s,553-measure(s,size),y,size);
  const finish=()=>{text(`Ogrodzenia / wycena orientacyjna / strona ${pages.length+1}`,42,28,8,'0.45 0.49 0.52');pages.push(content);content='';};
- const quote=estimate(project,product);
+ const quote=estimate(project,product,catalog);
  text('OGRODZENIA',42,792,11);right('ZAPYTANIE OFERTOWE',792,9);rule(775);
  text('Wycena materiałów',42,738,25);text(clipped(project.name,510,13),42,711,13);
  text(new Date().toLocaleDateString('pl-PL',{timeZone:'Europe/Warsaw'}),42,687,10);
  text(clipped(`${product.name} | wysokość ${project.height.toFixed(2)} m | szerokość przęsła ${product.moduleWidth.toFixed(2)} m`,510,10),42,657);
  text(`${quote.totalLength.toFixed(2)} m łącznie | ${quote.modules} przęseł | ${quote.posts} słupków`,42,638);
  text('Element',42,602,10);text('Ilość',350,602,10);right('Wartość brutto',602);rule(592);
- let y=565;for(const row of quote.rows){text(row.name,42,y);text(`${Number(row.quantity.toFixed(2))} ${row.unit}`,350,y);right(money(row.total).replaceAll('\u00a0',' '),y);rule(y-14);y-=39;}
+ let y=565;for(const row of quote.rows){text(row.name,42,y);text(`${Number(row.quantity.toFixed(2))} ${row.unit}`,350,y);right(money(row.total).replaceAll('\u00a0',' '),y);rule(y-14);y-=32;}
  text('Razem brutto',42,380,13);right(money(quote.total).replaceAll('\u00a0',' '),380,22);
  text('Plan ogrodzenia / rzut z góry',42,340,11);
  if(project.segments.length){const pts=project.segments.flatMap(s=>[s.a,s.b]);const minX=Math.min(...pts.map(p=>p.x)),minY=Math.min(...pts.map(p=>p.y)),maxX=Math.max(...pts.map(p=>p.x)),maxY=Math.max(...pts.map(p=>p.y));const scale=Math.min(480/Math.max(1,maxX-minX),165/Math.max(1,maxY-minY));
   for(const s of project.segments){const ax=52+(s.a.x-minX)*scale,ay=315-(s.a.y-minY)*scale,bx=52+(s.b.x-minX)*scale,by=315-(s.b.y-minY)*scale;content+=`0.24 0.31 0.36 RG 1.8 w ${s.kind==='fence'?'[]':'[5 3]'} 0 d ${ax} ${ay} m ${bx} ${by} l S [] 0 d\n`;}
  }else text('Pusty projekt',42,300);
  text('Szacunek nie stanowi oferty ani zamówienia. Wymaga potwierdzenia przez sprzedawcę.',42,116,9);
- text('Bez montażu, transportu, fundamentów i automatyki. Wysokość i kolor nie zmieniają ceny.',42,101,9);
+ text('Bez montażu, transportu i fundamentów. Wybrana automatyka jest ujęta w tabeli.',42,101,9);
  text('Poziomy gruntu są orientacyjne; model terenu nie zastępuje pomiarów działki.',42,86,9);
  text('Zapytania: tadekkw123@gmail.com',42,62,10);finish();
  for(let begin=0;begin<project.segments.length;begin+=25){text('Geometria i poziomy gruntu',42,785,20);text('Poziomy A i B względem umownego 0,00 m; długości w rzucie poziomym.',42,758,9);rule(743);text('Nr / typ',42,721);text('Długość',228,721);text('Grunt A',338,721);text('Grunt B',437,721);rule(709);let rowY=686;

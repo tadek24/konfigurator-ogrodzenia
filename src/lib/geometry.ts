@@ -6,6 +6,7 @@ export function interpolate(a: Point, b: Point, t: number): Point {
 export function splitOpening(s: Segment, kind: 'gate'|'wicket', width: number, offset: number): Segment[] {
  const l=length(s);
  if (s.kind!=='fence'||!Number.isFinite(width)||!Number.isFinite(offset)||width<.5||offset<0||offset+width>l+1e-8) throw new Error('Otwór musi mieścić się w zaznaczonym odcinku.');
+ if((offset>.001&&offset<.25)||(l-offset-width>.001&&l-offset-width<.25))throw new Error('Pozostały fragment ogrodzenia musi mieć co najmniej 0,25 m.');
  const a=interpolate(s.a,s.b,offset/l), b=interpolate(s.a,s.b,(offset+width)/l);
  const segments: Segment[]=[];
  if(offset>.001)segments.push({...s,id:crypto.randomUUID(),b:a});
