@@ -1,0 +1,14 @@
+import {products,type Product,type ProductType} from './project';
+export const productTypes:Record<ProductType,string>={fence:'Ogrodzenie / przęsło',post:'Słup',foundation:'Podmurówka / fundament',gate:'Brama',wicket:'Furtka',automation:'Automatyka',accessory:'Dodatek'};
+export const demoCatalog:Product[]=[...products.map(p=>({...p,companyId:'demo',type:'fence' as const,enabled:true,variants:[{id:'standard',name:'Standard 1,5 m',width:p.moduleWidth,height:1.5,color:'#454b50',price:p.price},{id:'high',name:'Wysokie 2 m',width:p.moduleWidth,height:2,color:'#aab0b3',price:p.price*1.3}]})),...(['post','foundation','gate','wicket','automation','accessory'] as const).map((type,i)=>({id:type,name:productTypes[type],type,companyId:'demo',enabled:true,style:'horizontal' as const,price:[140,120,4200,1450,1800,80][i],moduleWidth:2,gatePrice:4200,wicketPrice:1450,postPrice:140,variants:[]}))];
+export function isCatalog(value:unknown):value is Product[] {
+ if(!Array.isArray(value)||!value.length||value.length>500||new Set(value.map(p=>p?.id)).size!==value.length) return false;
+ const price=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1e7;
+ return value.every(p=>p&&typeof p.id==='string'&&p.id.length>0&&typeof p.name==='string'&&p.name.length>0&&['horizontal','vertical','mesh'].includes(p.style)&&(!p.type||p.type in productTypes)&&['price','gatePrice','wicketPrice','postPrice'].every(k=>price(p[k]))&&Number.isFinite(p.moduleWidth)&&p.moduleWidth>=.25&&p.moduleWidth<=30&&(p.enabled===undefined||typeof p.enabled==='boolean')&&(p.image===undefined||typeof p.image==='string'&&/^(https:\/\/|data:image\/(png|jpeg|webp);base64,|$)/.test(p.image))&&(p.variants===undefined||Array.isArray(p.variants)&&new Set(p.variants.map((v:{id:string})=>v.id)).size===p.variants.length&&p.variants.every((v:{id:string;name:string;width:number;height:number;color:string;price:number})=>typeof v.id==='string'&&typeof v.name==='string'&&Number.isFinite(v.width)&&v.width>=.25&&v.width<=30&&Number.isFinite(v.height)&&v.height>=.5&&v.height<=3&&/^#[0-9a-f]{6}$/i.test(v.color)&&price(v.price))));
+}
+// Replace this adapter with an HTTP API shared with the future WordPress landing page.
+export interface CatalogSource { load(companyId:string):Promise<Product[]>; save(companyId:string,items:Product[]):Promise<void> }
+export class LocalCatalogSource implements CatalogSource {
+ async load(companyId:string) {const raw=localStorage.getItem(`line-catalog-v2:${companyId}`);if(raw){const data:unknown=JSON.parse(raw);if(!isCatalog(data))throw Error('Nieprawidłowy katalog');return data;}return demoCatalog.map(p=>({...p,companyId}));}
+ async save(companyId:string,items:Product[]) {if(!isCatalog(items)||items.some(p=>p.companyId!==companyId))throw Error('Nieprawidłowy katalog firmy');localStorage.setItem(`line-catalog-v2:${companyId}`,JSON.stringify(items));}
+}

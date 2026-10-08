@@ -1,6 +1,8 @@
 export type Point = { x: number; y: number };
-export type Segment = { id: string; a: Point; b: Point; kind: 'fence' | 'gate' | 'wicket' };
-export type Product = { id: string; name: string; style: 'horizontal' | 'vertical' | 'mesh'; price: number; moduleWidth: number; gatePrice: number; wicketPrice: number; postPrice: number };
+export type Segment = { id: string; a: Point; b: Point; kind: 'fence' | 'gate' | 'wicket'; productId?:string; variantId?:string; height?:number; color?:string; foundationId?:string; automationId?:string; accessoryId?:string };
+export type ProductType = 'fence'|'post'|'foundation'|'gate'|'wicket'|'automation'|'accessory';
+export type Variant = {id:string;name:string;width:number;height:number;color:string;price:number};
+export type Product = { id: string; name: string; style: 'horizontal' | 'vertical' | 'mesh'; price: number; moduleWidth: number; gatePrice: number; wicketPrice: number; postPrice: number; companyId?:string; type?:ProductType; enabled?:boolean; image?:string; parameters?:string; variants?:Variant[] };
 export type Project = { version: 1; name: string; segments: Segment[]; productId: string; height: number; color: string };
 export const products: Product[] = [
  { id: 'modern', name: 'Modern / poziome', style: 'horizontal', price: 420, moduleWidth: 2, gatePrice: 4200, wicketPrice: 1450, postPrice: 140 },
@@ -32,5 +34,5 @@ export function isProject(value: unknown): value is Project {
  if (!value || typeof value !== 'object') return false;
  const p = value as Project;
  const point = (v: Point) => v && Number.isFinite(v.x) && Number.isFinite(v.y) && Math.abs(v.x) <= 500 && Math.abs(v.y) <= 500;
- return p.version === 1 && typeof p.name === 'string' && products.some(x => x.id === p.productId) && Number.isFinite(p.height) && p.height >= .5 && p.height <= 3 && /^#[0-9a-f]{6}$/i.test(p.color) && Array.isArray(p.segments) && p.segments.length <= 500 && p.segments.every(s => s && typeof s.id === 'string' && point(s.a) && point(s.b) && ['fence', 'gate', 'wicket'].includes(s.kind) && length(s) >= .25);
+ return p.version === 1 && typeof p.name === 'string' && typeof p.productId === 'string' && Number.isFinite(p.height) && p.height >= .5 && p.height <= 3 && /^#[0-9a-f]{6}$/i.test(p.color) && Array.isArray(p.segments) && p.segments.length <= 500 && new Set(p.segments.map(s=>s?.id)).size===p.segments.length && p.segments.every(s => s && typeof s.id === 'string' && point(s.a) && point(s.b) && ['fence', 'gate', 'wicket'].includes(s.kind) && length(s) >= .25 && length(s)<=100 && (s.height===undefined || (Number.isFinite(s.height)&&s.height>=.5&&s.height<=3)) && (s.color===undefined || /^#[0-9a-f]{6}$/i.test(s.color)) && ['productId','variantId','foundationId','automationId','accessoryId'].every(k=>s[k as keyof Segment]===undefined || typeof s[k as keyof Segment]==='string'));
 }
