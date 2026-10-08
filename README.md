@@ -1,39 +1,49 @@
-# LINE / konfigurator ogrodzeń
+# Ogrodzenia / edytor CAD i oferta handlowca
 
-Pierwszy działający fundament w Next.js App Router, TypeScript, React i React Three Fiber.
+Next.js 16, TypeScript i React Three Fiber. Zmiany połączono z wersją 0.4: zachowano teren, przeciąganie otworów, modele bram, zdjęcia i trasy pomocnicze.
 
 ## Uruchomienie
 
-Node.js 20.9 lub nowszy.
+Node.js 20.9+. `npm ci`, następnie `npm run dev -- --port 3101`. Otwórz http://127.0.0.1:3101. Produkcja: `npm run build`, potem `npm start -- --port 3101`.
 
-```sh
-npm install
-npm run dev
-```
+## Rysowanie i wymiary
 
-Otwórz http://127.0.0.1:3000. `npm run build` buduje wersję produkcyjną, `npm start` ją uruchamia. `npm run typecheck` sprawdza typy, `npm test` sprawdza kalkulację i walidację importu.
+- Odcinek (L), brama (G), furtka (F): kliknij początek i koniec. Możesz też podać dokładną długość i kierunek oraz wybrać „Wstaw według wymiarów”. Typowe pola obsługują 30 m; model importu i rysowanie odręczne zachowują zakres do 200 m.
+- ORTO / F8 wymusza osie. Wyłącz ORTO, aby rysować dowolne kąty. Przyciąganie do siatki 0,5 m działa niezależnie.
+- Przy rysowaniu widać długość, kierunek i łuk. Kliknięcie wartości kąta albo przycisku „Zablokuj kąt” uruchamia blokadę. Kółko zmienia wtedy kierunek o 1°, Shift + kółko o 5°, Ctrl + kółko o 0,1°. Bez aktywnej blokady kółko przybliża plan.
+- Kierunki na planie: 0° w prawo, 90° w dół, zgodnie z ruchem wskazówek zegara. Narożniki pokazują mniejszy rzeczywisty kąt między wychodzącymi odcinkami; proste połączenie ma 180°.
+- Przełączniki „Długości” i „Kąty” ograniczają liczbę opisów. PDF zawsze zawiera informacje techniczne.
+- Zmiana długości/kąta przesuwa wspólny węzeł sąsiadów, zachowując poziomy terenu. Operacja jest odrzucana, jeśli spowodowałaby odcinek krótszy niż 0,25 m lub przekroczenie zakresu modelu.
+- V: wybór, Esc: zakończenie. Ctrl+Z / Ctrl+Shift+Z: cofnij / ponów. Delete: usuń. Alt lub środkowy przycisk + przeciągnięcie: przesunięcie planu.
+- Poziomy gruntu A/B: -20 do 20 m. Teren 3D jest interpolacją, nie pomiarem geodezyjnym.
+- Bramy i furtki można wstawiać w istniejące przęsła albo przeciągać z biblioteki. Zachowano modele przesuwne/rozwierne i sprawdzanie zgodności automatyki.
 
-## Obsługa
+## Katalog i modele
 
-- Ołówek (L): klikaj punkty kolejnych odcinków. Esc kończy rysowanie.
-- Wybór (V): kliknij odcinek na planie albo na liście.
-- Panel właściwości: typ elementu, długość, produkt, wysokość i kolor.
-- Ctrl+Z / Ctrl+Shift+Z: cofnij / ponów. Delete: usuń zaznaczenie.
-- Przyciąganie: siatka 0,5 m i wyrównanie do osi poprzedniego punktu.
-- 3D: obrót przez przeciąganie i zoom kółkiem myszy. Wymaga WebGL.
-- Zapis automatyczny w localStorage, eksport i import JSON; nowy projekt nie usuwa pobranych plików.
-- Produkty: lokalna edycja cen przykładowych. Wycena: zestawienie i eksport projektu z kalkulacją.
+Zakładka „Produkty” i `/admin` udostępniają ten sam katalog lokalny. Karty rozwija się do edycji. Kategorie: przęsła, słupy, podmurówki/fundamenty, bramy, furtki, automatyka, dodatki. Można zmieniać ceny netto, sposób rozliczenia, wygląd, parametry, zdjęcia, dostępność i warianty szerokości/wysokości/koloru/ceny.
 
-## Model i granice pierwszej wersji
+Produkty wyłączone pozostają w istniejących projektach, ale nie są proponowane w wyborze nowych produktów. Musi pozostać co najmniej jeden aktywny system ogrodzenia. Zdjęcia z pliku: PNG/JPEG/WebP do 400 KB; adresy zdalne HTTPS. Katalog i oferta zapisują się lokalnie. Geometrię zapisuje się przyciskiem „Zapisz” i wznawia świadomie przy ponownym otwarciu.
 
-`src/lib/project.ts` definiuje wersjonowany projekt, katalog, walidację i czystą funkcję kalkulacji. `workspace.tsx` zarządza stanem edytora, `scene.tsx` generuje model 3D ze wspólnych odcinków. Domyślny przykład to otwarte ogrodzenie o długości 44 m. Ceny są demonstracyjne brutto: przęsła za metr, brama i furtka za sztukę, słupki z podziału na moduły. Wysokość i kolor nie wpływają jeszcze na cenę. Kalkulacja nie uwzględnia montażu, fundamentów, transportu, przycięć i automatyki. Model panelowy 3D jest uproszczony. Końce odcinków są niezależne: zmiana długości nie przesuwa sąsiadów. Odcinki rysowane niezależnie mogą na siebie nachodzić; walidacja kolizji jest kolejnym etapem.
+`segment-model.ts` rozstrzyga wspólne parametry dla 2D, 3D i PDF. Zmiana wariantu ustawia długość, a wysokość i kolor są pobierane z aktualnego katalogu; ręczne parametry odcinka mają pierwszeństwo. Podmurówki i dodatki mają uproszczone modele 3D i oznaczenia 2D. Automatyka jest widoczna na modelu bramy. Modele są poglądowe.
 
-To aplikacja lokalna bez uwierzytelniania i serwera danych. Nie ma jeszcze wysyłki e-mail ani zdjęć produktów. Nie należy publikować panelu jako produkcyjnego panelu sprzedawcy przed dodaniem logowania i autoryzacji. Zapis zależy od przeglądarki i adresu strony; eksport JSON jest przenośną kopią. Czcionki z Google Fonts mają systemowe zamienniki.
+## Oferta handlowca i PDF
 
-## Kolejne integracje
+Handlowiec edytuje nazwy, ilości, jednostki i ceny pozycji. „Reset / usuń” przywraca kalkulację pozycji systemowej lub usuwa pozycję dodatkową. Pozycję systemową można wyłączyć ilością 0. Można dodać montaż, transport, fundamenty, dodatki i własne pozycje. Rabat procentowy nalicza się od całej wartości netto, następnie odejmuje rabat kwotowy; rabat nie przekracza wartości oferty. VAT nalicza się od netto po rabacie, z zaokrągleniem do groszy.
 
-1. Baza: firmy, użytkownicy, produkty, cenniki, projekty i wyceny; izolacja danych firm.
-2. Panel sprzedawcy: uwierzytelnianie, zdjęcia/tekstury/model GLB i cenniki wymiarowe.
-3. Endpoint wyceny: serwer ponownie oblicza cenę z zaufanego katalogu; e-mail, walidacja kontaktu i ograniczanie nadużyć.
-4. Rozbudowa CAD: wspólne węzły, przeciąganie, kąty, przesuwanie planu, otwory w odcinku i kontrola kolizji.
-5. Vercel: import repozytorium jako Next.js, standardowe ustawienia build. Domena własna nie jest wymagana; wdrożenie nie jest częścią tej wersji.
+„Pobierz ofertę PDF” tworzy PDF bezpośrednio, z polską czcionką, danymi firmy/logo, klientem, warunkami, materiałami/usługami, zdjęciami, rabatami, netto/VAT/brutto, uwagami, planem 2D z kierunkami/łukami i tabelą wymiarów/poziomów. Podgląd 3D jest dołączany, jeśli wcześniej otwarto model i uzyskano aktualny obraz. Po zmianie projektu/katalogu stary obraz jest unieważniany. Zdjęcia HTTPS wymagają CORS; niedostępne zdjęcia są pomijane z komunikatem. Widok drukowania jest opcją dodatkową.
+
+Snapshot JSON i PDF utrwalają aktualny katalog, geometrię, korekty i ceny. Późniejsze zmiany katalogu nie zmieniają pobranej oferty. Ceny demonstracyjne są traktowane jako **netto**; starszy lokalny cennik opisany jako brutto trzeba zweryfikować przed przygotowaniem rzeczywistej oferty.
+
+## Integracje i ograniczenia
+
+- `CatalogSource` / `LocalCatalogSource`: adapter danych z identyfikatorem firmy i kluczami zapisu per firma. Docelowy adapter HTTP może być wspólny dla WordPressa i konfiguratora. UI demo korzysta z firmy `demo`.
+- `PricingEngine`: wymienna kalkulacja bazowych pozycji. Reguły z Excela mogą dostarczyć pozycje bez zmiany korekt, rabatów, VAT i eksportu.
+- Widok roli administrator/handlowiec/cennik jest miejscem pod przyszłe uprawnienia; nie realizuje uwierzytelniania ani zabezpieczeń. Izolacja firm i autoryzacja wymagają backendu.
+- Zachowano trasę `/api/inquiries` i wcześniejszy generator zapytań materiałowych. Nie wysyłają automatycznie nowych finalnych ofert. WordPress, baza i reguły konkretnej firmy nie są jeszcze podłączone.
+- Istniejący film i instrukcja PDF opisują wersję 0.4; aktualna obsługa jest opisana tutaj.
+
+## Sprawdzanie
+
+`npm test`, `npm run typecheck`, `npm run build`.
+
+Testy obejmują geometrię, otwory/teren, 30 m, kąty i kółko, warianty, walidację katalogu/oferty, usługi/własne pozycje, korekty, rabaty, snapshoty, silnik cen i oba generatory PDF (polskie znaki, strony, obrazy i ponowne otwarcie).

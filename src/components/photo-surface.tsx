@@ -1,0 +1,4 @@
+'use client';
+import {useEffect,useState} from 'react';
+import {TextureLoader,SRGBColorSpace,DoubleSide,type Texture} from 'three';
+export default function PhotoSurface({image,width,height}:{image?:string;width:number;height:number}){const [texture,setTexture]=useState<Texture|null>(null);useEffect(()=>{setTexture(null);if(!image)return;let active=true;const map=new TextureLoader().load(image,t=>{t.colorSpace=SRGBColorSpace;if(active)setTexture(t);},undefined,()=>{if(active)setTexture(null);});return()=>{active=false;map.dispose();};},[image]);return texture?<mesh position={[width/2,height/2,.065]}><planeGeometry args={[Math.max(.1,width-.16),Math.max(.1,height-.16)]}/><meshStandardMaterial map={texture} color="white" transparent alphaTest={.08} side={DoubleSide} roughness={.7} polygonOffset polygonOffsetFactor={-1}/></mesh>:null;}
