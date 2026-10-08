@@ -1,5 +1,15 @@
 # Ogrodzenia / edytor CAD i oferta handlowca
 
+## Studio i edycja na planie (0.6)
+
+Strona `/` to landing z wyborem konfiguratora, galerii, sklepu i kontaktu. `/konfigurator` otwiera czysty plan z aktywnym rysowaniem, bez popupu zasłaniającego płótno. ORTO i przyciąganie są domyślnie wyłączone. Sklep korzysta z tego samego adaptera katalogu co edytor; wybór przęsła przekazuje produkt do nowego projektu. Galeria pokazuje projekty poglądowe, a kontakt używa istniejącego adresu sprzedawcy. Sklep ma katalog i przejście do konfiguracji; nie realizuje płatności.
+
+Po wskazaniu początku odcinka kliknij jego dynamiczną długość lub kąt przy punkcie A, wpisz wartość i wybierz „Zastosuj”. Wpisanie długości blokuje długość, wpisanie kąta blokuje kierunek. Kliknięcie kolejnego punktu zatwierdza odcinek; można też użyć „Wstaw według wymiarów”. Blokady można wyłączyć w pasku geometrii. Dla gotowych odcinków kliknij etykietę długości/kierunku lub rzeczywisty kąt narożnika. Enter otwiera pole, Escape zamyka je, Enter w polu stosuje wartość; obsługiwany jest przecinek dziesiętny.
+
+Zmiana kąta narożnika zachowuje wspólny wierzchołek i pierwszy bok. Obraca drugi bok, zachowując jego długość, a jego zewnętrzny punkt przesuwa również końce połączonych sąsiadów. Ich długości i kąty dopasowują się automatycznie, także w zamkniętym planie. Zmiana jest odrzucana w całości, jeśli którykolwiek bok spadnie poniżej 0,25 m. ORTO ani kąty innych boków nie są trwałymi więzami geometrycznymi. Ten sam projekt zasila 2D, 3D, wycenę i PDF.
+
+Boczne panele mają zakładki zamiast kilku zagnieżdżonych przewijanych list. Przy bardzo długiej liście pojawia się pojedynczy wąski pasek przewijania, aby nie ukrywać danych.
+
 Next.js 16, TypeScript i React Three Fiber. Zmiany połączono z wersją 0.4: zachowano teren, przeciąganie otworów, modele bram, zdjęcia i trasy pomocnicze.
 
 ## Uruchomienie
