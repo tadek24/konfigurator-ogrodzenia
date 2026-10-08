@@ -57,3 +57,17 @@ export function resizeConnected(segments:Segment[],id:string,distance:number,ang
  const result=segments.map(x=>({...x,a:same(x.a)?{...next,z:x.a.z}:x.a,b:same(x.b)?{...next,z:x.b.z}:x.b}));
  return result.every(x=>Number.isFinite(length(x))&&length(x)>=.25)?result:segments;
 }
+
+/** Keep the shared corner fixed; move the second ray's outer node and its neighbours. */
+export function setCornerAngle(segments:Segment[],firstId:string,secondId:string,node:Point,angle:number) {
+ const first=segments.find(s=>s.id===firstId),second=segments.find(s=>s.id===secondId);
+ if(!first||!second||!Number.isFinite(angle)||angle<=0||angle>180)return segments;
+ const same=(a:Point,b:Point)=>Math.hypot(a.x-b.x,a.y-b.y)<1e-5;
+ if(![first.a,first.b].some(p=>same(p,node))||![second.a,second.b].some(p=>same(p,node)))return segments;
+ const rayA=same(first.a,node)?first.b:first.a,outer=same(second.a,node)?second.b:second.a;
+ const from=direction({a:node,b:rayA}),delta=(direction({a:node,b:outer})-from+360)%360;
+ const next=endpoint(node,length(second),from+(delta<=180?angle:-angle));
+ if(!Number.isFinite(next.x)||!Number.isFinite(next.y))return segments;
+ const result=segments.map(s=>({...s,a:same(s.a,outer)?{...next,z:s.a.z}:s.a,b:same(s.b,outer)?{...next,z:s.b.z}:s.b}));
+ return result.every(s=>Number.isFinite(length(s))&&length(s)>=.25)?result:segments;
+}
