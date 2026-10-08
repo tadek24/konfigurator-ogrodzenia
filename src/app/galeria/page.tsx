@@ -1,0 +1,3 @@
+import Link from 'next/link';
+import {SiteFrame,FenceVisual} from '@/components/site';
+export default function Page(){return <SiteFrame><main className="site-page"><span className="site-kicker">GALERIA / INSPIRACJE</span><h1>Różne formy.<br/>Ta sama dbałość o detal.</h1><p className="site-lead">Poglądowe projekty pokazujące możliwości konfiguratora. Wybierz styl i stwórz własny układ.</p><div className="gallery-grid">{(['horizontal','vertical','mesh'] as const).map((style,i)=><article key={style}><FenceVisual style={style}/><span className="site-kicker">KONCEPCJA / 0{i+1}</span><h2>{['Poziomy rytm','Pionowa elegancja','Lekka konstrukcja'][i]}</h2><Link className="text-link" href="/konfigurator">Zaprojektuj własny układ ↗</Link></article>)}</div></main></SiteFrame>;}
