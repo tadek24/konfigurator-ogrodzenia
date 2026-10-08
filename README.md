@@ -8,12 +8,12 @@ Node.js 20.9+. `npm ci`, następnie `npm run dev -- --port 3101`. Otwórz http:/
 
 ## Rysowanie i wymiary
 
-- Odcinek (L), brama (G), furtka (F): kliknij początek i koniec. Możesz też podać dokładną długość i kierunek oraz wybrać „Wstaw według wymiarów”. Typowe pola obsługują 30 m; model importu i rysowanie odręczne zachowują zakres do 200 m.
+- Odcinek (L), brama (G), furtka (F): kliknij początek i koniec. Możesz też podać dokładną długość i kierunek oraz wybrać „Wstaw według wymiarów”. Długość i współrzędne nie mają sztucznego górnego limitu. Długie odcinki mają uproszczony podgląd 3D, a wycena zachowuje rzeczywiste ilości.
 - ORTO / F8 wymusza osie. Wyłącz ORTO, aby rysować dowolne kąty. Przyciąganie do siatki 0,5 m działa niezależnie.
 - Przy rysowaniu widać długość, kierunek i łuk. Kliknięcie wartości kąta albo przycisku „Zablokuj kąt” uruchamia blokadę. Kółko zmienia wtedy kierunek o 1°, Shift + kółko o 5°, Ctrl + kółko o 0,1°. Bez aktywnej blokady kółko przybliża plan.
 - Kierunki na planie: 0° w prawo, 90° w dół, zgodnie z ruchem wskazówek zegara. Narożniki pokazują mniejszy rzeczywisty kąt między wychodzącymi odcinkami; proste połączenie ma 180°.
 - Przełączniki „Długości” i „Kąty” ograniczają liczbę opisów. PDF zawsze zawiera informacje techniczne.
-- Zmiana długości/kąta przesuwa wspólny węzeł sąsiadów, zachowując poziomy terenu. Operacja jest odrzucana, jeśli spowodowałaby odcinek krótszy niż 0,25 m lub przekroczenie zakresu modelu.
+- Zmiana długości/kąta przesuwa wspólny węzeł sąsiadów, zachowując poziomy terenu. Operacja jest odrzucana, jeśli spowodowałaby odcinek krótszy niż 0,25 m lub nieprawidłowe współrzędne.
 - V: wybór, Esc: zakończenie. Ctrl+Z / Ctrl+Shift+Z: cofnij / ponów. Delete: usuń. Alt lub środkowy przycisk + przeciągnięcie: przesunięcie planu.
 - Poziomy gruntu A/B: -20 do 20 m. Teren 3D jest interpolacją, nie pomiarem geodezyjnym.
 - Bramy i furtki można wstawiać w istniejące przęsła albo przeciągać z biblioteki. Zachowano modele przesuwne/rozwierne i sprawdzanie zgodności automatyki.
@@ -46,4 +46,4 @@ Snapshot JSON i PDF utrwalają aktualny katalog, geometrię, korekty i ceny. Pó
 
 `npm test`, `npm run typecheck`, `npm run build`.
 
-Testy obejmują geometrię, otwory/teren, 30 m, kąty i kółko, warianty, walidację katalogu/oferty, usługi/własne pozycje, korekty, rabaty, snapshoty, silnik cen i oba generatory PDF (polskie znaki, strony, obrazy i ponowne otwarcie).
+Testy obejmują geometrię, otwory/teren, długie odcinki (1 250 m), kąty i kółko, warianty, walidację katalogu/oferty, usługi/własne pozycje, korekty, rabaty, snapshoty, silnik cen i oba generatory PDF (polskie znaki, strony, obrazy i ponowne otwarcie).
