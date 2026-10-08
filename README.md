@@ -1,68 +1,49 @@
-# Ogrodzenia / edytor CAD - wersja 0.4
+# Ogrodzenia / edytor CAD i oferta handlowca
 
-Next.js 16, TypeScript i React Three Fiber. Rysunek 2D i scena 3D korzystają z tych samych odcinków.
+Next.js 16, TypeScript i React Three Fiber. Zmiany połączono z wersją 0.4: zachowano teren, przeciąganie otworów, modele bram, zdjęcia i trasy pomocnicze.
 
 ## Uruchomienie
 
-Node.js 20.9+.
+Node.js 20.9+. `npm ci`, następnie `npm run dev -- --port 3101`. Otwórz http://127.0.0.1:3101. Produkcja: `npm run build`, potem `npm start -- --port 3101`.
 
-```sh
-npm ci
-npm run dev -- --port 3101
-```
+## Rysowanie i wymiary
 
-Adres: http://127.0.0.1:3101. Wersja produkcyjna: `npm run build`, potem `npm start -- --port 3101`.
+- Odcinek (L), brama (G), furtka (F): kliknij początek i koniec. Możesz też podać dokładną długość i kierunek oraz wybrać „Wstaw według wymiarów”. Długość i współrzędne nie mają sztucznego górnego limitu. Długie odcinki mają uproszczony podgląd 3D, a wycena zachowuje rzeczywiste ilości.
+- ORTO / F8 wymusza osie. Wyłącz ORTO, aby rysować dowolne kąty. Przyciąganie do siatki 0,5 m działa niezależnie.
+- Przy rysowaniu widać długość, kierunek i łuk. Kliknięcie wartości kąta albo przycisku „Zablokuj kąt” uruchamia blokadę. Kółko zmienia wtedy kierunek o 1°, Shift + kółko o 5°, Ctrl + kółko o 0,1°. Bez aktywnej blokady kółko przybliża plan.
+- Kierunki na planie: 0° w prawo, 90° w dół, zgodnie z ruchem wskazówek zegara. Narożniki pokazują mniejszy rzeczywisty kąt między wychodzącymi odcinkami; proste połączenie ma 180°.
+- Przełączniki „Długości” i „Kąty” ograniczają liczbę opisów. PDF zawsze zawiera informacje techniczne.
+- Zmiana długości/kąta przesuwa wspólny węzeł sąsiadów, zachowując poziomy terenu. Operacja jest odrzucana, jeśli spowodowałaby odcinek krótszy niż 0,25 m lub nieprawidłowe współrzędne.
+- V: wybór, Esc: zakończenie. Ctrl+Z / Ctrl+Shift+Z: cofnij / ponów. Delete: usuń. Alt lub środkowy przycisk + przeciągnięcie: przesunięcie planu.
+- Poziomy gruntu A/B: -20 do 20 m. Teren 3D jest interpolacją, nie pomiarem geodezyjnym.
+- Bramy i furtki można wstawiać w istniejące przęsła albo przeciągać z biblioteki. Zachowano modele przesuwne/rozwierne i sprawdzanie zgodności automatyki.
 
-## Edytor
+## Katalog i modele
 
-- Start zawsze od pustego rysunku. Zapisany projekt wznawia się świadomie przyciskiem; stary przykład z wersji 0.1 nie otwiera się automatycznie.
-- Odcinek (L), brama (G), furtka (F): kliknij początek i koniec lub kierunek. Otwory mają długość z pola szerokości.
-- Otwór w istniejącym ogrodzeniu: zaznacz odcinek, podaj szerokość i odległość od A, wybierz Wstaw bramę lub Wstaw furtkę. Fragment ogrodzenia zostaje zastąpiony otworem.
-- V: wybór, Esc: zakończ rysowanie. Ctrl+Z / Ctrl+Shift+Z: cofnij / ponów. Delete: usuń.
-- ORTO / F8: kierunki poziome i pionowe. Przyciąganie: siatka 0,5 m oraz istniejące końce. Alt + przeciągnij albo środkowy przycisk: przesuń plan. Kółko: zoom.
-- Współrzędne w metrach. Poziomy gruntu A/B od -20 do 20 m względem umownego 0,00 m. Zmiana poziomu aktualizuje wszystkie końce w tej samej pozycji.
-- Podgląd 3D: jasne niebo, światło, cienie, interpolowana powierzchnia terenu. Przęsła pokazują spadek, bramy i furtki pozostają poziome i wskazują potrzebę sprawdzenia prześwitu. Teren jest przybliżeniem z poziomów odcinków, nie mapą geodezyjną. Model panelowy jest uproszczony.
-- Wycena pobiera rzeczywisty PDF z polskimi znakami, planem, materiałami i poziomami gruntu. JSON służy do zapisu i importu geometrii.
+Zakładka „Produkty” i `/admin` udostępniają ten sam katalog lokalny. Karty rozwija się do edycji. Kategorie: przęsła, słupy, podmurówki/fundamenty, bramy, furtki, automatyka, dodatki. Można zmieniać ceny netto, sposób rozliczenia, wygląd, parametry, zdjęcia, dostępność i warianty szerokości/wysokości/koloru/ceny.
 
-## Panel sprzedawcy /admin
+Produkty wyłączone pozostają w istniejących projektach, ale nie są proponowane w wyborze nowych produktów. Musi pozostać co najmniej jeden aktywny system ogrodzenia. Zdjęcia z pliku: PNG/JPEG/WebP do 400 KB; adresy zdalne HTTPS. Katalog i oferta zapisują się lokalnie. Geometrię zapisuje się przyciskiem „Zapisz” i wznawia świadomie przy ponownym otwarciu.
 
-W osobnym panelu: nazwa systemu, szerokość przęsła (0,25-6 m), rozliczenie za metr lub pełny moduł, cena przęsła, słupka, bramy i furtki. Przy naliczaniu za moduł końcowe przycięte przęsło jest liczone jako pełne. Słupki i 3D uwzględniają rzeczywistą szerokość modułów, nie równy podział całego odcinka.
+`segment-model.ts` rozstrzyga wspólne parametry dla 2D, 3D i PDF. Zmiana wariantu ustawia długość, a wysokość i kolor są pobierane z aktualnego katalogu; ręczne parametry odcinka mają pierwszeństwo. Podmurówki i dodatki mają uproszczone modele 3D i oznaczenia 2D. Automatyka jest widoczna na modelu bramy. Modele są poglądowe.
 
-Panel jest nadal lokalny, bez logowania: ustawienia zapisują się w localStorage tej przeglądarki i tego adresu. Otwiera się w osobnej karcie, żeby nie gubić rysunku. Po powrocie do konfiguratora ceny odświeżają się. Publikacja wielofirmowa wymaga uwierzytelniania, autoryzacji oraz zaufanego katalogu na serwerze.
+## Oferta handlowca i PDF
 
-### Nowości 0.3
+Handlowiec edytuje nazwy, ilości, jednostki i ceny pozycji. „Reset / usuń” przywraca kalkulację pozycji systemowej lub usuwa pozycję dodatkową. Pozycję systemową można wyłączyć ilością 0. Można dodać montaż, transport, fundamenty, dodatki i własne pozycje. Rabat procentowy nalicza się od całej wartości netto, następnie odejmuje rabat kwotowy; rabat nie przekracza wartości oferty. VAT nalicza się od netto po rabacie, z zaokrągleniem do groszy.
 
-- Katalog do 100 produktów: dodawanie i usuwanie przęseł, bram, furtek oraz zestawów automatyki. Import/eksport katalogu, migracja cenników 0.2, wybór wypełnienia 3D i metody montażu na spadku.
-- Brama lub furtka z lewej biblioteki: przeciągnij kartę na istniejący odcinek 2D. Gest obsługuje mysz i dotyk, podgląd dopasowuje kierunek, wysokości gruntu i pozycję; otwór zastępuje przęsła. Nie można upuścić na istniejącym otworze albo zbyt krótkim odcinku.
-- Model otworu i zgodna automatyka we właściwościach; ich ceny są ujęte w tabeli, PDF oraz zapytaniu. Domyślne ceny są demonstracyjne.
-- Zdjęcia PNG/JPG/WEBP do 400 KB i adres instrukcji producenta w katalogu. Zdjęcie może zostać włączone jako płaska powierzchnia 2,5D w modelu. Nie jest rekonstrukcją geometrii. Model siatkowy ma druty w obu kierunkach; dokładne modele indywidualnych wzorów wymagają osobnego etapu.
-- Sekcja kontroli montażu w wycenie: docinki, spadki, przecięcia odcinków, szerokości bram, kompatybilność napędu, strefa ruchu. Lista obejmuje pomiary, grunt i fundamenty, mocowania i powłoki, bramy, zasilanie, zabezpieczenia, odbiór i konserwację. Linki do dokumentacji WIŚNIOWSKI i Nice; nie zastępuje instrukcji wybranego systemu ani projektu fundamentów. Strefa ruchu jest parametrem informacyjnym; program nie wykrywa przeszkód poza narysowaną geometrią.
-- Czterostronicowa instrukcja public/instrukcja-konfiguratora.pdf i przyciski w edytorze oraz panelu.
+„Pobierz ofertę PDF” tworzy PDF bezpośrednio, z polską czcionką, danymi firmy/logo, klientem, warunkami, materiałami/usługami, zdjęciami, rabatami, netto/VAT/brutto, uwagami, planem 2D z kierunkami/łukami i tabelą wymiarów/poziomów. Podgląd 3D jest dołączany, jeśli wcześniej otwarto model i uzyskano aktualny obraz. Po zmianie projektu/katalogu stary obraz jest unieważniany. Zdjęcia HTTPS wymagają CORS; niedostępne zdjęcia są pomijane z komunikatem. Widok drukowania jest opcją dodatkową.
 
-## Zapytania e-mail
+Snapshot JSON i PDF utrwalają aktualny katalog, geometrię, korekty i ceny. Późniejsze zmiany katalogu nie zmieniają pobranej oferty. Ceny demonstracyjne są traktowane jako **netto**; starszy lokalny cennik opisany jako brutto trzeba zweryfikować przed przygotowaniem rzeczywistej oferty.
 
-Odbiorca jest ustalony po stronie serwera: **tadekkw123@gmail.com**. Klient podaje kontakt i uwagi, a serwer dołącza PDF oraz geometrię JSON. Projekt jest zapytaniem, nie zamówieniem ani płatnością. Nie ma koszyka.
+## Integracje i ograniczenia
 
-Automatyczna wysyłka jest przygotowana przez Resend REST API bez dodatkowych zależności. Aby ją uruchomić, skopiuj `.env.example` do `.env.local` i ustaw `RESEND_API_KEY` oraz `QUOTE_FROM` (nadawca dopuszczony w koncie Resend). W Vercel ustaw te same zmienne po stronie serwera. Klucza nie dodawaj do repozytorium ani do zmiennych NEXT_PUBLIC. Dokumentacja: https://resend.com/docs/api-reference/emails/send-email
+- `CatalogSource` / `LocalCatalogSource`: adapter danych z identyfikatorem firmy i kluczami zapisu per firma. Docelowy adapter HTTP może być wspólny dla WordPressa i konfiguratora. UI demo korzysta z firmy `demo`.
+- `PricingEngine`: wymienna kalkulacja bazowych pozycji. Reguły z Excela mogą dostarczyć pozycje bez zmiany korekt, rabatów, VAT i eksportu.
+- Widok roli administrator/handlowiec/cennik jest miejscem pod przyszłe uprawnienia; nie realizuje uwierzytelniania ani zabezpieczeń. Izolacja firm i autoryzacja wymagają backendu.
+- Zachowano trasę `/api/inquiries` i wcześniejszy generator zapytań materiałowych. Nie wysyłają automatycznie nowych finalnych ofert. WordPress, baza i reguły konkretnej firmy nie są jeszcze podłączone.
+- Istniejący film i instrukcja PDF opisują wersję 0.4; aktualna obsługa jest opisana tutaj.
 
-Przed konfiguracją przycisk wysyłania jest nieaktywny, a Przygotuj e-mail otwiera klienta pocztowego z adresatem i treścią. PDF trzeba wtedy dołączyć ręcznie. API zwraca sukces dopiero po otrzymaniu identyfikatora wiadomości od usługi; oznacza przyjęcie do wysyłki, nie gwarancję dotarcia do skrzynki. Integracja nie została przetestowana z prawdziwą skrzynką, ponieważ nie dostarczono klucza usługi.
+## Sprawdzanie
 
-Endpoint waliduje kontakt, geometrię i katalog, nie pozwala zmienić odbiorcy, ma honeypot, sprawdzenie Origin, limit rozmiaru oraz podstawowy limit 3 prób / e-mail / 10 minut w pamięci procesu. Ten limit nie jest rozproszony - przed publicznym wdrożeniem należy dodać trwałą kontrolę nadużyć. Ceny z lokalnego katalogu są informacją od klienta, nie zaufaną ofertą; sprzedawca musi je potwierdzić. Docelowy backend powinien wyliczać je z własnej bazy.
+`npm test`, `npm run typecheck`, `npm run build`.
 
-## Sprawdzenie
-
-`npm run build`, `npm run typecheck`, `npm test`. Testy obejmują zastępowanie odcinka otworem, wspólne poziomy gruntu, rozliczenie modułów, walidację katalogu i zapytania oraz strukturę i paginację PDF. PDF ma osadzoną czcionkę Liberation Sans (licencja w public/fonts/LICENSE_LIBERATION).
-
-## Następny etap
-
-Konta i katalog w bazie; trwale zapisywane zapytania ze statusem; wysyłka z potwierdzeniem doręczenia; przeciąganie wspólnych węzłów i walidacja kolizji; pomiary i bardziej szczegółowe modele. Zamówienia oraz płatności można dodać jako osobny etap po zaakceptowaniu wyceny.
-
-## Nowości 0.4
-
-- Dowolny kąt kierunku w stopniach, także ułamkowy; rysowanie według długości i kąta oraz edycja istniejącego odcinka.
-- Bramy mają ramy, podział skrzydeł, zawiasy i klamki; bramy przesuwne mają prowadzenie. Plan pokazuje symbole otwierania.
-- Zdjęcie można włączyć jako płaski podgląd w 3D. Najlepsze PNG na wprost z przezroczystym tłem; prawdziwa bryła wymaga GLB (import GLB jeszcze nie jest obsługiwany).
-- /instrukcja: około 48-sekundowy film z napisami z rzeczywistych widoków oraz PDF. Bez lektora.
-- /dla-firm: prezentacja korzyści, dodatków i mierzenia skuteczności bez gwarantowania wzrostu obrotów.
-
-Aktualna wersja jest demonstratorem/pilotem. Sprzedaż jako wspólnej usługi wymaga kont, bazy katalogu, trwale zapisywanych zapytań i aktywacji poczty. Brak pomiarów wyników sprzedaży.
+Testy obejmują geometrię, otwory/teren, długie odcinki (1 250 m), kąty i kółko, warianty, walidację katalogu/oferty, usługi/własne pozycje, korekty, rabaty, snapshoty, silnik cen i oba generatory PDF (polskie znaki, strony, obrazy i ponowne otwarcie).

@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {segmentModel} from '../src/lib/segment-model';
+import {initialProject} from '../src/lib/project';
+import {demoCatalog} from '../src/lib/catalog';
+import {calculateOffer,defaultOffer,isOfferSettings} from '../src/lib/offer';
+import {resizeConnected} from '../src/lib/geometry';
+const s={id:'v',kind:'fence' as const,productId:'modern',variantId:'high',a:{x:0,y:0},b:{x:30,y:0}};
+test('editing selected catalogue variant updates shared scene dimensions and price',()=>{const catalog=structuredClone(demoCatalog);catalog[0].variants![1].height=2.5;catalog[0].variants![1].color='#112233';catalog[0].variants![1].price=600;const model=segmentModel(s,initialProject,catalog);assert.equal(model.height,2.5);assert.equal(model.color,'#112233');assert.equal(calculateOffer({...initialProject,segments:[s]},catalog,defaultOffer).rows[0].total,18000);assert.equal(segmentModel({...s,height:1.8},initialProject,catalog).height,1.8);});
+test('resize refuses collapsed neighbours and allows coordinates beyond 500m',()=>{const segments=[{...s,b:{x:10,y:0}},{...s,id:'next',a:{x:10,y:0},b:{x:12,y:0}}];assert.deepEqual(resizeConnected(segments,'v',12,0),segments);assert.equal(resizeConnected([{...s,a:{x:490,y:0},b:{x:495,y:0}}],'v',30,0)[0].b.x,520);});
+test('offer persistence rejects corrupt settings and invalid overrides',()=>{assert.ok(isOfferSettings(defaultOffer));assert.equal(isOfferSettings({...defaultOffer,company:null}),false);assert.equal(isOfferSettings({...defaultOffer,overrides:{x:{price:NaN}}}),false);});
+test('future pricing adapter can supply imported Excel rows without changing discounts',()=>{const q=calculateOffer(initialProject,demoCatalog,{...defaultOffer,discountPercent:10},{rows:()=>[{id:'excel',name:'Z Excela',category:'material',quantity:2,price:500,unit:'szt.'}]});assert.equal(q.net,900);assert.equal(q.gross,1107);});

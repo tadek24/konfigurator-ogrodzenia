@@ -1,13 +1,26 @@
-import { products, openingProducts, category, type Product } from './project';
-export const CATALOG_KEY='fence-catalog-v3';
-export const defaultCatalog=[...products,...openingProducts];
-export function isCatalog(value:unknown): value is Product[]{
- if(!Array.isArray(value)||!value.length||value.length>100||new Set(value.map(p=>p?.id)).size!==value.length)return false;
- return value.some(p=>p&&category(p)==='fence')&&value.every(p=>p&&typeof p.id==='string'&&/^[a-z0-9-]{1,80}$/i.test(p.id)&&['fence','gate','wicket','automation'].includes(category(p))&&['horizontal','vertical','mesh'].includes(p.style)&&['price','gatePrice','wicketPrice','postPrice'].every(k=>Number.isFinite(p[k])&&p[k]>=0&&p[k]<=1000000)&&Number.isFinite(p.moduleWidth)&&p.moduleWidth>=.25&&p.moduleWidth<=(category(p)==='gate'?12:6)&&['meter','module'].includes(p.priceMode)&&typeof p.name==='string'&&p.name.trim().length>0&&p.name.length<=80&&(p.gateType===undefined||['swing','sliding'].includes(p.gateType))&&(p.compatibleWith===undefined||['swing','sliding','both'].includes(p.compatibleWith))&&(p.mounting===undefined||['slope','steps'].includes(p.mounting))&&(p.clearance===undefined||(Number.isFinite(p.clearance)&&p.clearance>=0&&p.clearance<=30))&&(p.usePhoto===undefined||typeof p.usePhoto==='boolean')&&(p.image===undefined||(typeof p.image==='string'&&p.image.length<600000&&/^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(p.image)))&&(p.instructionsUrl===undefined||(typeof p.instructionsUrl==='string'&&p.instructionsUrl.length<=500&&/^https:\/\//.test(p.instructionsUrl))));
+import {products,openingProducts,category,type Product,type ProductType} from './project';
+export const productTypes:Record<ProductType,string>={fence:'Ogrodzenie / przęsło',post:'Słup',foundation:'Podmurówka / fundament',gate:'Brama',wicket:'Furtka',automation:'Automatyka',accessory:'Dodatek'};
+export const demoCatalog:Product[]=[...products.map(p=>({...p,companyId:'demo',type:'fence' as const,enabled:true,variants:[{id:'standard',name:'Standard 1,5 m',width:p.moduleWidth,height:1.5,color:'#454b50',price:p.price},{id:'high',name:'Wysokie 2 m',width:p.moduleWidth,height:2,color:'#aab0b3',price:p.price*1.3}]})),...(['post','foundation','gate','wicket','automation','accessory'] as const).map((type,i)=>({id:type,name:productTypes[type],type,companyId:'demo',enabled:true,style:'horizontal' as const,price:[140,120,4200,1450,1800,80][i],priceMode:type==='foundation'?'meter' as const:'module' as const,moduleWidth:2,gatePrice:4200,wicketPrice:1450,postPrice:140,variants:[]})),...openingProducts.map(p=>({...p,companyId:'demo',type:category(p),enabled:true,variants:[]}))];
+export function migrateLegacyCatalog(items:Product[]):Product[]{
+ const additions=demoCatalog.filter(p=>['post','foundation','accessory'].includes(category(p))&&!items.some(x=>category(x)===category(p)));
+ return [...items,...additions];
 }
+export function isCatalog(value:unknown):value is Product[] {
+ if(!Array.isArray(value)||!value.length||value.length>500||new Set(value.map(p=>p?.id)).size!==value.length) return false;
+ const price=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1e7;
+ return value.some(p=>p&&category(p)==='fence'&&p.enabled!==false)&&value.every(p=>p&&typeof p.id==='string'&&/^[a-z0-9-]{1,80}$/i.test(p.id)&&typeof p.name==='string'&&p.name.trim().length>0&&p.name.length<=80&&['horizontal','vertical','mesh'].includes(p.style)&&(!p.type||p.type in productTypes)&&(!p.category||p.category in productTypes)&&['meter','module'].includes(p.priceMode)&&(p.gateType===undefined||['swing','sliding'].includes(p.gateType))&&(p.compatibleWith===undefined||['swing','sliding','both'].includes(p.compatibleWith))&&(p.mounting===undefined||['slope','steps'].includes(p.mounting))&&(p.instructionsUrl===undefined||typeof p.instructionsUrl==='string'&&/^https:\/\//.test(p.instructionsUrl))&&['price','gatePrice','wicketPrice','postPrice'].every(k=>price(p[k]))&&Number.isFinite(p.moduleWidth)&&p.moduleWidth>=.25&&(p.enabled===undefined||typeof p.enabled==='boolean')&&(p.image===undefined||typeof p.image==='string'&&p.image.length<=600000&&/^(https:\/\/|data:image\/(png|jpeg|webp);base64,|$)/.test(p.image))&&(p.variants===undefined||Array.isArray(p.variants)&&new Set(p.variants.map((v:{id:string})=>v?.id)).size===p.variants.length&&p.variants.every((v:{id:string;name:string;width:number;height:number;color:string;price:number})=>v&&typeof v.id==='string'&&typeof v.name==='string'&&Number.isFinite(v.width)&&v.width>=.25&&Number.isFinite(v.height)&&v.height>=.5&&v.height<=3&&/^#[0-9a-f]{6}$/i.test(v.color)&&price(v.price))));
+}
+// Replace this adapter with an HTTP API shared with the future WordPress landing page.
+export interface CatalogSource { load(companyId:string):Promise<Product[]>; save(companyId:string,items:Product[]):Promise<void> }
+export class LocalCatalogSource implements CatalogSource {
+ async load(companyId:string) {const raw=localStorage.getItem(`line-catalog-v2:${companyId}`);if(raw){const data:unknown=JSON.parse(raw);if(!isCatalog(data)||data.some(p=>p.companyId!==companyId))throw Error('Nieprawidłowy katalog');return data;}return (companyId==='demo'?readCatalog():demoCatalog).map(p=>({...p,companyId}));}
+ async save(companyId:string,items:Product[]) {if(!isCatalog(items)||items.some(p=>p.companyId!==companyId))throw Error('Nieprawidłowy katalog firmy');localStorage.setItem(`line-catalog-v2:${companyId}`,JSON.stringify(items));if(companyId==='demo')localStorage.setItem(CATALOG_KEY,JSON.stringify(items));}
+}
+
+export const CATALOG_KEY="fence-catalog-v3";
+export const defaultCatalog=demoCatalog;
 export function readCatalog():Product[]{
- try{const v:unknown=JSON.parse(localStorage.getItem(CATALOG_KEY)??'null');if(isCatalog(v))return v;const old:unknown=JSON.parse(localStorage.getItem('fence-catalog-v2')??'null');if(isCatalog(old))return [...old,...openingProducts];}catch{}
- return defaultCatalog.map(p=>({...p}));
+ try{const v:unknown=JSON.parse(localStorage.getItem(CATALOG_KEY)??'null');if(isCatalog(v))return migrateLegacyCatalog(v);const old:unknown=JSON.parse(localStorage.getItem('fence-catalog-v2')??'null');if(isCatalog(old))return migrateLegacyCatalog([...old,...openingProducts.filter(p=>!old.some(x=>x.id===p.id))]);}catch{}
+ try{const raw=localStorage.getItem("line-catalog-v2:demo");if(raw){const data=JSON.parse(raw);if(isCatalog(data))return data;}}catch{}return defaultCatalog.map(p=>({...p}));
 }
 export function compatibleAutomation(gate:Product,automation:Product){return category(gate)==='gate'&&category(automation)==='automation'&&(automation.compatibleWith==='both'||automation.compatibleWith===(gate.gateType??'swing'));}
-

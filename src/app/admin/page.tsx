@@ -1,2 +1,2 @@
-import SellerPanel from '@/components/seller-panel';
-export default function AdminPage(){return <SellerPanel/>;}
+import Workspace from '@/components/workspace';
+export default function AdminPage(){return <Workspace initialTab="products"/>;}

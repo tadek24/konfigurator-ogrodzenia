@@ -1,6 +1,8 @@
 export type Point = { x: number; y: number; z?: number };
-export type Segment = { id: string; a: Point; b: Point; kind: 'fence' | 'gate' | 'wicket'; openingProductId?: string; automationId?: string };
-export type Product = { id: string; name: string; style: 'horizontal' | 'vertical' | 'mesh'; price: number; moduleWidth: number; priceMode: 'meter' | 'module'; gatePrice: number; wicketPrice: number; postPrice: number; category?: 'fence'|'gate'|'wicket'|'automation'; gateType?: 'swing'|'sliding'; compatibleWith?: 'swing'|'sliding'|'both'; image?: string; usePhoto?: boolean; instructionsUrl?: string; clearance?: number; mounting?: 'slope'|'steps' };
+export type Segment = { id: string; a: Point; b: Point; kind: 'fence' | 'gate' | 'wicket'; openingProductId?: string; automationId?: string; productId?:string; variantId?:string; height?:number; color?:string; foundationId?:string; accessoryId?:string };
+export type ProductType = 'fence'|'post'|'foundation'|'gate'|'wicket'|'automation'|'accessory';
+export type Variant = {id:string;name:string;width:number;height:number;color:string;price:number};
+export type Product = { id: string; name: string; companyId?:string; type?:ProductType; enabled?:boolean; parameters?:string; variants?:Variant[]; style: 'horizontal' | 'vertical' | 'mesh'; price: number; moduleWidth: number; priceMode: 'meter' | 'module'; gatePrice: number; wicketPrice: number; postPrice: number; category?: ProductType; gateType?: 'swing'|'sliding'; compatibleWith?: 'swing'|'sliding'|'both'; image?: string; usePhoto?: boolean; instructionsUrl?: string; clearance?: number; mounting?: 'slope'|'steps' };
 export type Project = { version: 1; name: string; segments: Segment[]; productId: string; height: number; color: string };
 export const products: Product[] = [
  { id: 'modern', name: 'Modern / poziome', style: 'horizontal', price: 420, moduleWidth: 2, priceMode: 'meter', gatePrice: 4200, wicketPrice: 1450, postPrice: 140 },
@@ -14,10 +16,10 @@ export const openingProducts:Product[]=[
  {...products[0],id:'automation-swing',name:'Zestaw automatyki rozwiernej',category:'automation',compatibleWith:'swing',moduleWidth:1,priceMode:'module',price:1800},
  {...products[0],id:'automation-sliding',name:'Zestaw automatyki przesuwnej',category:'automation',compatibleWith:'sliding',moduleWidth:1,priceMode:'module',price:1600},
 ];
-export const category=(p:Product)=>p.category??'fence';
+export const category=(p:Product)=>p.type??p.category??'fence';
 export const initialProject: Project = { version: 1, name: 'Nowy projekt', productId: 'modern', height: 1.5, color: '#454b50', segments: [] };
 export const length = (s: Segment) => Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
-export const money = (n: number) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN', maximumFractionDigits: 0 }).format(n);
+export const money = (n: number) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 export function estimate(project: Project, product: Product, catalog:Product[] = []) {
  const fence = project.segments.filter(s => s.kind === 'fence');
  const meters = fence.reduce((n, s) => n + length(s), 0);
@@ -35,8 +37,6 @@ export function estimate(project: Project, product: Product, catalog:Product[] =
 export function isProject(value: unknown): value is Project {
  if (!value || typeof value !== 'object') return false;
  const p = value as Project;
- const point = (v: Point) => v && Number.isFinite(v.x) && Number.isFinite(v.y) && Math.abs(v.x) <= 500 && Math.abs(v.y) <= 500 && (v.z === undefined || (Number.isFinite(v.z) && Math.abs(v.z) <= 20));
- return p.version === 1 && typeof p.name === 'string' && p.name.length <= 80 && typeof p.productId === 'string' && /^[a-z0-9-]{1,80}$/i.test(p.productId) && Number.isFinite(p.height) && p.height >= .5 && p.height <= 3 && /^#[0-9a-f]{6}$/i.test(p.color) && Array.isArray(p.segments) && p.segments.length <= 500 && new Set(p.segments.map(s=>s?.id)).size === p.segments.length && p.segments.every(s => s && typeof s.id === 'string' && point(s.a) && point(s.b) && ['fence', 'gate', 'wicket'].includes(s.kind) && [s.openingProductId,s.automationId].every(id=>id===undefined||(typeof id==='string'&&/^[a-z0-9-]{1,80}$/i.test(id))) && length(s) >= .25 && length(s) <= 200);
+ const point = (v: Point) => v && Number.isFinite(v.x) && Number.isFinite(v.y) && (v.z === undefined || (Number.isFinite(v.z) && Math.abs(v.z) <= 20));
+ return p.version === 1 && typeof p.name === 'string' && p.name.length <= 80 && typeof p.productId === 'string' && /^[a-z0-9-]{1,80}$/i.test(p.productId) && Number.isFinite(p.height) && p.height >= .5 && p.height <= 3 && /^#[0-9a-f]{6}$/i.test(p.color) && Array.isArray(p.segments) && p.segments.length <= 500 && new Set(p.segments.map(s=>s?.id)).size === p.segments.length && p.segments.every(s => s && typeof s.id === 'string' && point(s.a) && point(s.b) && ['fence', 'gate', 'wicket'].includes(s.kind) && [s.openingProductId,s.automationId].every(id=>id===undefined||(typeof id==='string'&&/^[a-z0-9-]{1,80}$/i.test(id))) && length(s) >= .25 && Number.isFinite(length(s)) && (s.height===undefined||Number.isFinite(s.height)&&s.height>=.5&&s.height<=3) && (s.color===undefined||/^#[0-9a-f]{6}$/i.test(s.color)) && [s.productId,s.variantId,s.foundationId,s.accessoryId].every(id=>id===undefined||typeof id==='string'));
 }
-
-

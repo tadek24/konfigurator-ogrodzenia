@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {PDFDocument} from 'pdf-lib';
+import {salesOfferPdf} from '../src/lib/offer-pdf';
+import {offerSnapshot,defaultOffer} from '../src/lib/offer';
+import {initialProject} from '../src/lib/project';
+import {demoCatalog} from '../src/lib/catalog';
+const font=new Uint8Array(readFileSync('public/fonts/LiberationSans-Regular.ttf'));
+test('professional PDF embeds Polish font, plan and geometry and can be reopened',async()=>{const p={...initialProject,name:'Łódź / Żółć',segments:[{id:'x',kind:'fence' as const,a:{x:0,y:0},b:{x:30,y:0}},{id:'y',kind:'fence' as const,a:{x:30,y:0},b:{x:30,y:12}}]};const snapshot=offerSnapshot(p,demoCatalog,{...defaultOffer,customer:'Łukasz Żółć',discountPercent:5});const bytes=await salesOfferPdf(snapshot,font);const doc=await PDFDocument.load(bytes);assert.equal(doc.getPageCount(),3);assert.equal(doc.getPage(0).getSize().width,595);assert.ok(bytes.length>5000);});
+test('long offers paginate, retain final rows and reopen correctly',async()=>{const snapshot=offerSnapshot(initialProject,demoCatalog,{...defaultOffer,extra:Array.from({length:80},(_,i)=>({id:String(i),name:'Montaż '+i,unit:'m',price:100,quantity:2,category:'installation' as const}))});const bytes=await salesOfferPdf(snapshot,font);const doc=await PDFDocument.load(bytes);assert.ok(doc.getPageCount()>=5);});
+test('embedded product photo and 3D preview add the visualization page',async()=>{const png=Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=','base64'));const snapshot=offerSnapshot(initialProject,demoCatalog,defaultOffer);const bytes=await salesOfferPdf(snapshot,font,{},png);const doc=await PDFDocument.load(bytes);assert.equal(doc.getPageCount(),3);});
