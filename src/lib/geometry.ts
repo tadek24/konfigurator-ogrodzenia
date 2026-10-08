@@ -50,10 +50,10 @@ export function arcPath(point:Point, from:number, angle:number, radius=25, scale
  return `M ${a.x} ${a.y} A ${radius} ${radius} 0 ${angle>180?1:0} 1 ${b.x} ${b.y}`;
 }
 export function resizeConnected(segments:Segment[],id:string,distance:number,angle:number) {
- const s=segments.find(x=>x.id===id); if(!s||!Number.isFinite(distance)||distance<.25||distance>100||!Number.isFinite(angle)) return segments;
+ const s=segments.find(x=>x.id===id); if(!s||!Number.isFinite(distance)||distance<.25||!Number.isFinite(angle)) return segments;
  const next={...endpoint(s.a,distance,angle),z:s.b.z};
- if(Math.abs(next.x)>500||Math.abs(next.y)>500)return segments;
+ if(!Number.isFinite(next.x)||!Number.isFinite(next.y))return segments;
  const same=(p:Point)=>Math.hypot(p.x-s.b.x,p.y-s.b.y)<1e-5;
  const result=segments.map(x=>({...x,a:same(x.a)?{...next,z:x.a.z}:x.a,b:same(x.b)?{...next,z:x.b.z}:x.b}));
- return result.every(x=>length(x)>=.25&&length(x)<=200)?result:segments;
+ return result.every(x=>Number.isFinite(length(x))&&length(x)>=.25)?result:segments;
 }
